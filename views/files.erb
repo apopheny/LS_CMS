@@ -1,3 +1,8 @@
-<% @file_content.each do |line| %>
-  <div><%== line %></div>
+<% if session[:is_markdown] %>
+  <% session[:is_markdown] = false %>
+  <%== @file_content %>
+<% else %>
+  <% @file_content.each do |line| %>
+    <div><%== line %></div>
+  <% end %>
 <% end %>
