@@ -1,9 +1,8 @@
-<div><%== @file_error %></div>
-
-<ul>
+<div><%== @file_status %></div>
+<table>
   <% @public_files.each do |file| %>
-    <li>
-      <a href ="<%= file %>"><%== file %></a>
-    </li>
+    <tr>
+      <td><a href ="<%= file %>"><%== file %></a></td><td><a href ='<%= file %>/edit'>Edit</a></td>
+    </tr>
   <% end %>
-</ul>
+</table>
