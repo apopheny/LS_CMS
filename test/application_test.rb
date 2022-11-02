@@ -22,15 +22,18 @@ class AppTest < Minitest::Test
 
   def setup
     3.times do
-      File.open("#{garbage_name}.txt", 'w+') { |file| file.write "Lorem ipsum" }
+      File.open("./test/testfiles/#{garbage_name}.txt", 'w+') { |file| file.write "Lorem ipsum" }
     end
-    File.open("some_text_example.txt", 'w+') { |file| file.write "Some test input" }
+    File.open("./test/testfiles/some_text_example.txt", 'w+') { |file| file.write "Some test input" }
+    File.open("./test/testfiles/changes.txt", 'w+') { |file| file.write "Changes" }
+    File.open('./test/testfiles/about.md', 'w+') { |file| file.write "# Ruby is..." }
 
     @file_names = current_directory_files
   end
 
   def teardown
-    FileUtils.rm Dir.glob('*.txt')
+    FileUtils.rm Dir.glob('./test/testfiles/*.txt')
+    FileUtils.rm Dir.glob('./test/testfiles/*.md')
   end
 
   def test_index
@@ -45,57 +48,54 @@ class AppTest < Minitest::Test
 
   def test_return_txt_file
     get '/some_text_example.txt'
-    # assert_equal 200, last_response.status
+    assert_equal 200, last_response.status
     assert_equal "text/html;charset=utf-8", last_response["Content-Type"]
     assert_includes last_response.body, "Some test input"
-
   end
 
-
-
-  # def test_invalid_file
-  #   name = garbage_name
+  def test_invalid_file
+    name = garbage_name
     
-  #   get "/#{name}"
-  #   assert_equal 302, last_response.status
+    get "/#{name}"
+    assert_equal 302, last_response.status
     
-  #   get last_response['Location']
+    get last_response['Location']
 
-  #   assert_equal 200, last_response.status
-  #   assert_includes last_response.body, "'#{name}' does not exist."
+    assert_equal 200, last_response.status
+    assert_includes last_response.body, "'#{name}' does not exist."
     
-  #   get '/'
-  #   refute_includes last_response.body, "'#{name}' does not exist."
-  # end
+    get '/'
+    refute_includes last_response.body, "'#{name}' does not exist."
+  end
 
-  # # test/cms_test.rb
-  # def test_viewing_markdown_document
-  #   get "/about.md"
+  # test/cms_test.rb
+  def test_viewing_markdown_document
+    get "/about.md"
 
-  #   assert_equal 200, last_response.status
-  #   assert_equal "text/html;charset=utf-8", last_response["Content-Type"]
-  #   assert_includes last_response.body, "<h1>Ruby is...</h1>"
-  # end
+    assert_equal 200, last_response.status
+    assert_equal "text/html;charset=utf-8", last_response["Content-Type"]
+    assert_includes last_response.body, "<h1>Ruby is...</h1>"
+  end
 
-  # def test_editing_document
-  #   get "/changes.txt/edit"
+  def test_editing_document
+    get "/changes.txt/edit"
 
-  #   assert_equal 200, last_response.status
-  #   assert_includes last_response.body, "<textarea"
-  #   assert_includes last_response.body, %q(<input type="submit")
-  # end
+    assert_equal 200, last_response.status
+    assert_includes last_response.body, "<textarea"
+    assert_includes last_response.body, %q(<input type="submit")
+  end
 
-  # def test_updating_document
-  #   post "/changes.txt", content: "new content"
+  def test_updating_document
+    post "/changes.txt/edit", file_changes: "new content"
 
-  #   assert_equal 302, last_response.status
+    assert_equal 302, last_response.status
 
-  #   get last_response["Location"]
+    get last_response["Location"]
 
-  #   assert_includes last_response.body, "changes.txt has been updated"
+    assert_includes last_response.body, "changes.txt has been updated"
 
-  #   get "/changes.txt"
-  #   assert_equal 200, last_response.status
-  #   assert_includes last_response.body, "new content"
-  # end
+    get "/changes.txt"
+    assert_equal 200, last_response.status
+    assert_includes last_response.body, "new content"
+  end
 end
