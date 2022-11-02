@@ -48,20 +48,28 @@ before do
   end.to_h
 end
 
-markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML)
+def markdown
+  Redcarpet::Markdown.new(Redcarpet::Render::HTML)
+end
 
 def markdown?(file_name)
   file_name[-3..] == '.md'
 end
 
 get '/' do
-  @file_status = if session[:file_error]
+  @status = if session[:file_error]
                    session.delete(:file_error)
                  elsif session[:file_status]
                    session.delete(:file_status)
+                 elsif session[:welcome]
+                    session.delete(:welcome)
                  end
 
-  erb :index
+  if session[:logged_in]
+    erb :index
+  else 
+    erb :login
+  end
 end
 
 get '/:file_name' do
@@ -124,6 +132,27 @@ get '/:file_name/delete' do
   else
     session[:file_error] = "'#{@name}' does not exist and cannot be deleted."
   end
+
+  redirect '/'
+end
+
+post '/user/login' do
+  session[:last_user_name] = params[:username].to_s
+
+  if params[:username] == 'admin' && params[:password] == 'secret'
+    session[:logged_in] = true
+    session[:welcome] = "Welcome, #{session[:last_user_name]}"
+  else
+    session[:welcome] = 'Invalid credentials provided.'
+  end
+  
+  redirect '/'
+end
+
+get '/user/logout' do
+  session[:logged_in] = false
+  session[:welcome] = "'#{session[:last_user_name]}' has been signed out."
+  session[:last_user_name] = ''
 
   redirect '/'
 end

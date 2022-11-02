@@ -1,0 +1,17 @@
+<% if @status %>
+  <div class='message'><%== @status %></div>
+<% end %>
+
+<form action='/user/login' method='post'>
+  <table>
+    <tr>
+      <td>username:</td><td><input type='text' name='username' value='<%= session[:last_user_name] %>'></td>
+    </tr>
+    <tr>
+      <td>password:</td><td><input type='password' name='password'></td>
+    </tr>
+    <tr>
+      <td><input type='submit' value='Submit'></td><td><a href='/'><input type='button' value='Cancel'></a></td>
+    </tr>
+  </table>
+</form>

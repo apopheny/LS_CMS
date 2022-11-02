@@ -1,7 +1,12 @@
-<% if @file_status %>
-  <div class='message'><%== @file_status %></div>
+<% if @status %>
+  <div class='message'><%== @status %></div>
 <% end %>
-<p><a href='/new_file/create'>Create new file</a></p>
+<table>
+  <tr>
+    <td><a href='/new_file/create'>Create new file</a></td>
+    <td><a href='/user/logout'>Log out</a></td>
+  </tr>
+</table>
 <table>
   <% @public_files.each do |file| %>
     <tr>
@@ -10,3 +15,4 @@
     </tr>
   <% end %>
 </table>
+<p>Signed in as '<%== session[:last_user_name] %>'</p>

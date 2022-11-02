@@ -130,4 +130,10 @@ class AppTest < Minitest::Test
     assert_includes last_response.body, "'some_text_example.txt' was deleted."
     refute_includes current_directory_files, 'some_text_example.txt'
   end
+
+  # def test_login
+  #   post 'user/login', username: 'not_admin'
+  #   get last_response['Location']
+  #   assert_includes last_response.body 'Invalid credentials provided.'
+  # end
 end
