@@ -27,16 +27,19 @@ def path
   end
 end
 
-def file_valid?(name)
+def file_error?(name)
   if name.empty?
     session[:file_error] = "A filename must be provided."
   elsif current_directory_files.include?(name)
     session[:file_error] = "'#{name}' already exists."
   elsif !(name[-4..] == '.txt' || name[-3..] == '.md')
     session[:file_error] = "'#{name}' is not a '.txt' or '.md' file."
-  else
-    session[:file_status] = "'#{name}' was created."
   end
+end
+
+def file_valid?(name)
+  file_error?(name)
+  session[:file_status] = "'#{name}' was created." unless session[:file_error]
   !session[:file_error]
 end
 
