@@ -27,6 +27,19 @@ def path
   end
 end
 
+def file_valid?(name)
+  if name.empty?
+    session[:file_error] = "A filename must be provided."
+  elsif current_directory_files.include?(name)
+    session[:file_error] = "'#{name}' already exists."
+  elsif !(name[-4..] == '.txt' || name[-3..] == '.md')
+    session[:file_error] = "'#{name}' is not a '.txt' or '.md' file."
+  else
+    session[:file_status] = "'#{name}' was created."
+  end
+  !session[:file_error]
+end
+
 before do
   @public_files = current_directory_files
 
@@ -86,7 +99,31 @@ post '/:file_name/edit' do
 
   File.open(path + @name, 'w') { |current_file| current_file.write(changes) }
 
-  session[:file_status] = "'#{@name} has been updated."
+  session[:file_status] = "'#{@name}' has been updated."
+
+  redirect '/'
+end
+
+get '/new_file/create' do
+  erb :new_file
+end
+
+post '/new_file/create' do
+  @new_file_name = params[:new_file_name]
+  File.new(path + @new_file_name, 'w+') if file_valid?(@new_file_name)
+
+  redirect '/'
+end
+
+get '/:file_name/delete' do
+  @name = params[:file_name].to_s
+
+  if current_directory_files.include?(@name)
+    File.delete(path + @name)
+    session[:file_status] = "'#{@name}' was deleted."
+  else
+    session[:file_error] = "'#{@name}' does not exist and cannot be deleted."
+  end
 
   redirect '/'
 end

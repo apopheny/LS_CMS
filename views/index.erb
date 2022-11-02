@@ -1,8 +1,12 @@
-<div><%== @file_status %></div>
+<% if @file_status %>
+  <div class='message'><%== @file_status %></div>
+<% end %>
+<p><a href='/new_file/create'>Create new file</a></p>
 <table>
   <% @public_files.each do |file| %>
     <tr>
       <td><a href ="<%= file %>"><%== file %></a></td><td><a href ='<%= file %>/edit'>Edit</a></td>
+      <td><a href ='/<%= file %>/delete'>Delete File</a></td>
     </tr>
   <% end %>
 </table>

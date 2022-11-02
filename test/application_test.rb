@@ -92,10 +92,42 @@ class AppTest < Minitest::Test
 
     get last_response["Location"]
 
-    assert_includes last_response.body, "changes.txt has been updated"
+    assert_includes last_response.body, "'changes.txt' has been updated"
 
     get "/changes.txt"
     assert_equal 200, last_response.status
     assert_includes last_response.body, "new content"
+  end
+
+  def test_new_file
+    get '/new_file/create'
+    assert_equal 200, last_response.status
+
+    post '/new_file/create', new_file_name: ''
+    assert_equal 302, last_response.status
+    get last_response["Location"]
+    refute_includes current_directory_files, ''
+    assert_includes last_response.body, "A filename must be provided."
+
+    post '/new_file/create', new_file_name: 'new_file_name'
+    assert_equal 302, last_response.status
+    get last_response["Location"]
+    refute_includes current_directory_files, 'new_file_name'
+    assert_includes last_response.body, "is not a '.txt' or '.md' file."
+    
+    post '/new_file/create', new_file_name: 'new_file_name.txt'
+    assert_equal 302, last_response.status
+    get last_response["Location"]
+    assert_includes last_response.body, "'new_file_name.txt' was created."
+    assert_includes current_directory_files, 'new_file_name.txt'
+    assert_equal 200, last_response.status
+  end
+
+  def test_delete_file
+    get 'some_text_example.txt/delete'
+    assert_equal 302, last_response.status
+    get last_response["Location"]
+    assert_includes last_response.body, "'some_text_example.txt' was deleted."
+    refute_includes current_directory_files, 'some_text_example.txt'
   end
 end
