@@ -59,23 +59,26 @@ def markdown?(file_name)
   file_name[-3..] == '.md'
 end
 
+def logged_in?
+  !!session[:logged_in]
+end
+
 get '/' do
   @status = if session[:file_error]
-                   session.delete(:file_error)
-                 elsif session[:file_status]
-                   session.delete(:file_status)
-                 elsif session[:welcome]
-                    session.delete(:welcome)
-                 end
+              session.delete(:file_error)
+            elsif session[:file_status]
+              session.delete(:file_status)
+            elsif session[:welcome]
+              session.delete(:welcome)
+            end
 
-  if session[:logged_in]
-    erb :index
-  else 
-    erb :login
-  end
+  redirect '/user/login' unless logged_in?
+  erb :index
 end
 
 get '/:file_name' do
+  redirect '/user/login' unless logged_in?
+
   @name = params[:file_name].to_s
 
   if @public_files.include?(@name)
@@ -93,6 +96,8 @@ get '/:file_name' do
 end
 
 get '/:file_name/edit' do
+  redirect '/user/login' unless logged_in?
+
   @name = params[:file_name].to_s
 
   if @public_files.include?(@name)
@@ -105,6 +110,8 @@ get '/:file_name/edit' do
 end
 
 post '/:file_name/edit' do
+  redirect '/user/login' unless logged_in?
+
   @name = params[:file_name].to_s
   changes = params[:file_changes]
 
@@ -116,10 +123,14 @@ post '/:file_name/edit' do
 end
 
 get '/new_file/create' do
+  redirect '/user/login' unless logged_in?
+
   erb :new_file
 end
 
 post '/new_file/create' do
+  redirect '/user/login' unless logged_in?
+
   @new_file_name = params[:new_file_name]
   File.new(path + @new_file_name, 'w+') if file_valid?(@new_file_name)
 
@@ -127,6 +138,8 @@ post '/new_file/create' do
 end
 
 get '/:file_name/delete' do
+  redirect '/user/login' unless logged_in?
+
   @name = params[:file_name].to_s
 
   if current_directory_files.include?(@name)
@@ -139,12 +152,17 @@ get '/:file_name/delete' do
   redirect '/'
 end
 
+get '/user/login' do
+  erb :login
+end
+
 post '/user/login' do
   session[:last_user_name] = params[:username].to_s
+  session[:last_password] = params[:password].to_s
 
-  if params[:username] == 'admin' && params[:password] == 'secret'
+  if session[:last_user_name] == 'admin' && session[:last_password] == 'secret'
     session[:logged_in] = true
-    session[:welcome] = "Welcome, #{session[:last_user_name]}"
+    session[:welcome] = "Welcome, '#{session[:last_user_name]}'"
   else
     session[:welcome] = 'Invalid credentials provided.'
   end

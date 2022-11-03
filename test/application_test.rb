@@ -9,6 +9,10 @@ require_relative "../application"
 class AppTest < Minitest::Test
   include Rack::Test::Methods
 
+  def session
+    last_request.env['rack.session']
+  end
+
   def app
     Sinatra::Application
   end
@@ -37,7 +41,7 @@ class AppTest < Minitest::Test
   end
 
   def test_index
-    get "/"
+    get "/", {}, {"rack.session" => { logged_in: true} }
     
     assert_equal 200, last_response.status
     assert_equal "text/html;charset=utf-8", last_response["Content-Type"]
@@ -47,7 +51,7 @@ class AppTest < Minitest::Test
   end
 
   def test_return_txt_file
-    get '/some_text_example.txt'
+    get '/some_text_example.txt', {}, {"rack.session" => { logged_in: true} }
     assert_equal 200, last_response.status
     assert_equal "text/html;charset=utf-8", last_response["Content-Type"]
     assert_includes last_response.body, "Some test input"
@@ -56,7 +60,7 @@ class AppTest < Minitest::Test
   def test_invalid_file
     name = garbage_name
     
-    get "/#{name}"
+    get "/#{name}", {}, {"rack.session" => { logged_in: true} }
     assert_equal 302, last_response.status
     
     get last_response['Location']
@@ -68,9 +72,8 @@ class AppTest < Minitest::Test
     refute_includes last_response.body, "'#{name}' does not exist."
   end
 
-  # test/cms_test.rb
-  def test_viewing_markdown_document
-    get "/about.md"
+    def test_viewing_markdown_document
+    get "/about.md", {}, {"rack.session" => { logged_in: true} }
 
     assert_equal 200, last_response.status
     assert_equal "text/html;charset=utf-8", last_response["Content-Type"]
@@ -78,7 +81,7 @@ class AppTest < Minitest::Test
   end
 
   def test_editing_document
-    get "/changes.txt/edit"
+    get "/changes.txt/edit", {}, {"rack.session" => { logged_in: true} }
 
     assert_equal 200, last_response.status
     assert_includes last_response.body, "<textarea"
@@ -86,6 +89,7 @@ class AppTest < Minitest::Test
   end
 
   def test_updating_document
+    get "/changes.txt/edit", {}, {"rack.session" => { logged_in: true} }
     post "/changes.txt/edit", file_changes: "new content"
 
     assert_equal 302, last_response.status
@@ -100,7 +104,7 @@ class AppTest < Minitest::Test
   end
 
   def test_new_file
-    get '/new_file/create'
+    get '/new_file/create', {}, {"rack.session" => { logged_in: true} }
     assert_equal 200, last_response.status
 
     post '/new_file/create', new_file_name: ''
@@ -124,16 +128,18 @@ class AppTest < Minitest::Test
   end
 
   def test_delete_file
-    get 'some_text_example.txt/delete'
+    get 'some_text_example.txt/delete', {}, {"rack.session" => { logged_in: true} }
     assert_equal 302, last_response.status
     get last_response["Location"]
     assert_includes last_response.body, "'some_text_example.txt' was deleted."
     refute_includes current_directory_files, 'some_text_example.txt'
   end
 
-  # def test_login
-  #   post 'user/login', username: 'not_admin'
-  #   get last_response['Location']
-  #   assert_includes last_response.body 'Invalid credentials provided.'
-  # end
+  def test_login
+    get 'user/login', {}, {"rack.session" => { last_username: 'not_admin', last_password: 'something'} }
+    refute_equal true, session[:logged_in]
+    post 'user/login', username: 'admin', password: 'secret'
+    get last_response['Location']
+    assert_includes last_response.body, "Welcome"
+  end
 end
